@@ -1,0 +1,9 @@
+streamlit
+langchain-groq
+langchain-openai
+langchain-google
+langchain-core
+langgraph
+typing-extensions
+python-dotenv
+configparser
