@@ -7,3 +7,5 @@ langgraph
 typing-extensions
 python-dotenv
 configparser
+langchain-tavily
+grandalf

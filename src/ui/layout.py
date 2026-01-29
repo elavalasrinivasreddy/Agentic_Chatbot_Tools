@@ -1,5 +1,6 @@
 import streamlit as st 
 from src.ui.config import Config
+import os
 
 
 class Layout:
@@ -27,16 +28,16 @@ class Layout:
                 self.user_selections["openai_model"] = st.selectbox("Select OpenAI Model", self.config.get_openai_models())
             
             # Get API Key and validate it
-            self.user_selections["llm_api_key"] = st.session_state.llm_api_key = st.text_input("Enter your API key", type="password", key="api_key")
+            self.user_selections["llm_api_key"] = st.text_input("Enter your API key", type="password", key="api_key")
             if self.user_selections["llm_api_key"] == "":
                 st.error("Please enter your API key")
             else:
                 st.success("API key validated successfully")
 
             # Get the tool api key (Tavily)
-            if self.user_selections["use_case"] == "Chatbot with tools":
-                self.user_selections["tavily_api_key"] = st.session_state.tavily_api_key = st.text_input("Enter your Tavily API key", type="password", key="tavily_api_key")
-                if self.user_selections["tavily_api_key"] == "":
+            if self.user_selections["use_case"] == "Chatbot with Web Search":
+                os.environ["TAVILY_API_KEY"] = st.text_input("Enter your Tavily API key", type="password", key="tavily_api_key")
+                if os.environ["TAVILY_API_KEY"] == "":
                     st.error("Please enter your Tavily API key")
                 else:
                     st.success("Tavily API key validated successfully")

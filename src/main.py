@@ -1,10 +1,12 @@
 import streamlit as st
 from src.ui.layout import Layout
-from src.workflow.llms.groq_with_tools import Groq_with_tools
-from src.workflow.llms.openai_with_tools import OpenAI_with_tools
-from src.workflow.llms.gemini_with_tools import Gemini_with_tools
+from src.workflow.llms.groq import Groq
+from src.workflow.llms.openai import OpenAI
+from src.workflow.llms.gemini import Gemini
+from src.workflow.graphs.chatbot_graph import Chatbot_graph
 from src.workflow.graphs.chatbot_with_tools_graph import Chatbot_with_tools_graph
 from src.ui.display_results import DisplayResults
+from langchain_core.messages import AIMessage,HumanMessage
 
 def load_layout():
     """
@@ -38,17 +40,17 @@ def load_layout():
         try:
             # Get the model from user selection
             if user_selections["llm_model"] == "Groq":
-                llm_object = Groq_with_tools(user_selections=user_selections)
+                llm_object = Groq(user_selections=user_selections)
                 # Re-initialize model if configuration changed
                 model_key = f"{user_selections.get('groq_model', '')}_{user_selections.get('llm_api_key', '')}"
             
             if user_selections["llm_model"] == "OpenAI":
-                llm_object = OpenAI_with_tools(user_selections=user_selections)
+                llm_object = OpenAI(user_selections=user_selections)
                 # Re-initialize model if configuration changed
                 model_key = f"{user_selections.get('openai_model', '')}_{user_selections.get('llm_api_key', '')}"
             
             if user_selections["llm_model"] == "Gemini":
-                llm_object = Gemini_with_tools(user_selections=user_selections)
+                llm_object = Gemini(user_selections=user_selections)
                 # Re-initialize model if configuration changed
                 model_key = f"{user_selections.get('gemini_model', '')}_{user_selections.get('llm_api_key', '')}"
 
@@ -65,36 +67,41 @@ def load_layout():
                 st.error("Error: Use case is not selected")
                 return
 
-            # Get the graph based on the use case
-            if use_case == "Chatbot with tools":
-                graph_builder = Chatbot_with_tools_graph(model=st.session_state.llm_model)
-                try:
+            try:
+                # Get the graph based on the user selected use case
+                if use_case == "Chatbot":
+                    graph_builder = Chatbot_graph(model=st.session_state.llm_model)
                     chatbot_graph = graph_builder.build_graph()
+                
+                if use_case == "Chatbot with Web Search":
+                    graph_builder = Chatbot_with_tools_graph(model=st.session_state.llm_model)
+                    chatbot_graph = graph_builder.build_graph()
+                    # Display the graph in mermaid
+                    graph_builder.display_graph(chatbot_graph)
 
-                    # Prepare messages for the graph including history
-                    chat_history = []
-                    for m in st.session_state.messages:
-                        if m["role"] == "user":
-                            chat_history.append(HumanMessage(content=m["content"]))
-                        else:
-                            chat_history.append(AIMessage(content=m["content"]))
-                    
-                    # Add current user input
-                    chat_history.append(HumanMessage(content=user_input))
+                # Prepare messages for the graph including history
+                chat_history = []
+                for m in st.session_state.messages:
+                    if m["role"] == "user":
+                        chat_history.append(HumanMessage(content=m["content"]))
+                    else:
+                        chat_history.append(AIMessage(content=m["content"]))
+                
+                # Add current user input
+                chat_history.append(HumanMessage(content=user_input))
 
-                    # Display the results
-                    display_results = DisplayResults(use_case=use_case, workflow=chatbot_graph, user_input=user_input)
-                    display_results.display(chat_history)
-                    
-                    # Update session state with the new message
-                    st.session_state.messages.append({"role": "user", "content": user_input})
-                    st.session_state.messages.append({"role": "assistant", "content": display_results.display(chat_history)})
-                    # Rerun the app to display the new message
-                    st.rerun()
-                    
-                except Exception as e:
-                        st.error(f"Error: Failed to build basic chatbot graph {e}")
-                        return
+                # Display the results
+                display_results = DisplayResults(use_case=use_case, workflow=chatbot_graph, user_input=user_input)
+                
+                # Update session state with the new message
+                st.session_state.messages.append({"role": "user", "content": user_input})
+                st.session_state.messages.append({"role": "assistant", "content": display_results.display(chat_history)})
+                # Rerun the app to display the new message
+                st.rerun()
+                
+            except Exception as e:
+                    st.error(f"Error: Failed to build basic chatbot graph {e}")
+                    return
         except Exception as e:
             st.error(f"Error: {e}")
             return 

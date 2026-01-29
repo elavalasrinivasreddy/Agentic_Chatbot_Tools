@@ -2,7 +2,7 @@ from langchain_openai import ChatOpenAI
 import os
 import streamlit as st
 
-class OpenAI_with_tools:
+class OpenAI:
     def __init__(self, user_selections):
         self.user_selections = user_selections
 
@@ -17,9 +17,6 @@ class OpenAI_with_tools:
                 st.error("Please enter your model name")
                 return None
             model = ChatOpenAI(api_key=api_key, model_name=model_name)
-            # Bind the model with tools
-            # tools = self.user_selections["tools"]
-            # model.bind_tools(tools)
             st.success("OpenAI model loaded successfully")
             return model
         except Exception as e:

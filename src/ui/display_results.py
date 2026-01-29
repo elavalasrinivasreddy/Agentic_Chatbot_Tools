@@ -12,7 +12,7 @@ class DisplayResults:
         workflow = self.workflow
         
         full_response = ""
-        if use_case == "Chatbot with tools":
+        if use_case == "Chatbot":
             # Stream the response from the workflow
             for event in workflow.stream({"messages": messages}):
                 for value in event.values():
@@ -28,3 +28,27 @@ class DisplayResults:
                             message_placeholder.markdown(full_response)
             
             return full_response
+
+        elif use_case == "Chatbot with Web Search": # display the tool message if any
+            # Stream the response from the workflow
+            for event in workflow.stream({"messages": messages}):
+                for value in event.values():
+                    if 'messages' in value:
+                        response_msg = value['messages']
+                        if isinstance(response_msg, list):
+                            response_msg = response_msg[-1]
+                        
+                        # displaying tool message if any
+                        # if isinstance(response_msg, ToolMessage):
+                        #     with st.chat_message("tool"):
+                        #         st.markdown(response_msg.content)
+
+                        # Use a context manager for the assistant message
+                        if isinstance(response_msg, AIMessage):
+                            with st.chat_message("assistant"):
+                                message_placeholder = st.empty()
+                                full_response += response_msg.content
+                                message_placeholder.markdown(full_response)
+                        
+            return full_response
+        
