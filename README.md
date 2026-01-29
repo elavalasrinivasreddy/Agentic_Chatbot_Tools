@@ -60,7 +60,7 @@ graph TD
    ```
 3. Run the application:
    ```bash
-   streamlit run src/main.py
+   streamlit run app.py
    ```
 
 ## 📁 Project Structure
