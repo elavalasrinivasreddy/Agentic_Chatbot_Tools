@@ -7,6 +7,7 @@ from src.workflow.graphs.chatbot_graph import Chatbot_graph
 from src.workflow.graphs.chatbot_with_tools_graph import Chatbot_with_tools_graph
 from src.ui.display_results import DisplayResults
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from src.ui.graph_display import GraphDisplay   
 
 def load_layout():
     """
@@ -71,26 +72,39 @@ def load_layout():
                 st.error("Error: Use case is not selected")
                 return
 
-            try:
-                # Get the graph based on the user selected use case
-                if use_case == "Chatbot":
-                    graph_builder = Chatbot_graph(model=st.session_state.llm_model)
-                    chatbot_graph = graph_builder.build_graph()
-                
-                if use_case == "Chatbot with Web Search":
-                    graph_builder = Chatbot_with_tools_graph(model=st.session_state.llm_model)
-                    chatbot_graph = graph_builder.build_graph()
-                    # Display the graph in mermaid
-                    graph_builder.display_graph(chatbot_graph)
+            # Create a unique key for the current configuration (model + use case)
+            config_key = f"{model_key}_{use_case}"
+            
+            # Check if we need to rebuild the graph
+            if "chatbot_graph" not in st.session_state or st.session_state.get("current_config_key") != config_key:
+                try:
+                    # Get the graph based on the user selected use case
+                    if use_case == "Chatbot":
+                        graph_builder = Chatbot_graph(model=st.session_state.llm_model)
+                        st.session_state.chatbot_graph = graph_builder.build_graph()
+                        # Display the graph in console only when built/rebuilt
+                        GraphDisplay().display_graph(st.session_state.chatbot_graph)
+                    
+                    elif use_case == "Chatbot with Web Search":
+                        graph_builder = Chatbot_with_tools_graph(model=st.session_state.llm_model)
+                        st.session_state.chatbot_graph = graph_builder.build_graph()
+                        # Display the graph in console only when built/rebuilt
+                        GraphDisplay().display_graph(st.session_state.chatbot_graph)
+                    
+                    st.session_state.current_config_key = config_key
+                except Exception as e:
+                    st.error(f"Error: Failed to build chatbot graph: {e}")
+                    return
 
+            chatbot_graph = st.session_state.chatbot_graph
+
+            try:
                 # Prepare messages for the graph including history
                 chat_history = []
                 for m in st.session_state.messages:
                     if m["role"] == "user":
                         chat_history.append(HumanMessage(content=m["content"]))
                     elif m["role"] == "tool":
-                        # We need a tool_call_id, but for simple history we might not have it 
-                        # In a more robust implementation, we'd store the full message object
                         chat_history.append(ToolMessage(content=m["content"], tool_call_id="unknown"))
                     else:
                         chat_history.append(AIMessage(content=m["content"]))
@@ -101,14 +115,14 @@ def load_layout():
                 # Display the results
                 display_results = DisplayResults(use_case=use_case, workflow=chatbot_graph, user_input=user_input)
                 
-                # Update session state with the new message
+                # Update session state with the new messages
                 st.session_state.messages.append({"role": "user", "content": user_input})
                 st.session_state.messages.extend(display_results.display(chat_history))
-                # Rerun the app to display the new message
+                # Rerun the app to display the new messages
                 st.rerun()
                 
             except Exception as e:
-                    st.error(f"Error: Failed to build basic chatbot graph {e}")
+                    st.error(f"Error executing graph: {e}")
                     return
         except Exception as e:
             st.error(f"Error: {e}")

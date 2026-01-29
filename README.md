@@ -19,7 +19,7 @@ A simple linear graph where the user input is processed by the LLM and the respo
 
 ```mermaid
 graph TD
-    START((START)) --> chatbot[Chatbot Node]
+    START((START)) --> chatbot[Chatbot]
     chatbot --> END((END))
 ```
 
@@ -28,18 +28,17 @@ An agentic graph that can decide to use tools (like web search) based on the use
 
 ```mermaid
 graph TD
-    START((START)) --> chatbot[Chatbot Node]
-    chatbot --> condition{tools_condition}
-    condition -- "use tools" --> tools[Tools Node]
+    START((START)) --> chatbot[Chatbot]
+    chatbot -- "use tools" --> tools[Tools]
     tools --> chatbot
-    condition -- "finish" --> END((END))
+    chatbot -- "finish" --> END((END))
 ```
 
 ## 🛠️ Components
 
 - **Nodes**:
-  - `Chatbot_node`: Handles LLM invocation.
-  - `Tools_node`: Executes tool calls (e.g., Tavily Search).
+  - `Chatbot`: Handles LLM invocation.
+  - `Tools`: Executes tool calls (e.g., Tavily Search).
 - **State**:
   - `Chatbot_state`: Manages the message history using `Annotated[List, add_messages]`.
 - **Tools**:

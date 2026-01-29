@@ -44,10 +44,10 @@ class DisplayResults:
                             msg_to_process = msg_data
                         
                         # # displaying tool message if any
-                        # if isinstance(msg_to_process, ToolMessage):
-                        #     with st.chat_message("tool"):
-                        #         st.markdown(f"**Tool Output:**\n{msg_to_process.content}")
-                        #     generated_messages.append({"role": "tool", "content": msg_to_process.content})
+                        if isinstance(msg_to_process, ToolMessage):
+                            with st.chat_message("tool"):
+                                st.markdown(f"**Tool Output:**\n{msg_to_process.content}")
+                            generated_messages.append({"role": "tool", "content": msg_to_process.content})
 
                         # Use a context manager for the assistant message
                         if isinstance(msg_to_process, AIMessage):
